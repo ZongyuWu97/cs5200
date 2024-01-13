@@ -20,6 +20,14 @@ main <- function()
   # Test get dir PDF
   print(getObjPath(rootDir, "PDF"))
   
+  # Add files to docDB for bellow test
+  file.create(file.path(rootDir, "test1.pdf"))
+  file.create(file.path(rootDir, "test2.png"))
+  file.create(file.path(rootDir, "test3.jpg"))
+  file.create(file.path(rootDir, "test4.jpeg"))
+  file.create(file.path(rootDir, "test5.doc"))
+  file.create(file.path(rootDir, "test6.docx"))
+  
   # Test copy from docDB to copy
   storeObjs(rootDir, "copy")
   
