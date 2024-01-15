@@ -1,3 +1,5 @@
+# Author: Zongyu Wu
+
 rootDir <- "docDB"
 
 main <- function()
@@ -20,15 +22,20 @@ main <- function()
   # Test get dir PDF
   print(getObjPath(rootDir, "PDF"))
   
-  # Add files to docDB for bellow test
+  # Add files to docDB for bellow test. 
   file.create(file.path(rootDir, "test1.pdf"))
   file.create(file.path(rootDir, "test2.png"))
   file.create(file.path(rootDir, "test3.jpg"))
   file.create(file.path(rootDir, "test4.jpeg"))
   file.create(file.path(rootDir, "test5.doc"))
   file.create(file.path(rootDir, "test6.docx"))
+  file.create(file.path(rootDir, "test7"))
+  dir.create(file.path(rootDir, "notCopy"))
+  file.create(file.path(rootDir, "notCopy", "test8.png"))
   
-  # Test copy from docDB to copy
+  # Test copy from docDB to copy. Will create copy if it doesn't exist.
+  # test7 is not copied as it has no extension.
+  # test8 is not copied as it's inside a subfolder.
   storeObjs(rootDir, "copy")
   
   # Test clear copy.PDF
