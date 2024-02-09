@@ -1,0 +1,198 @@
+---
+title: "WuZ.CS5200.SQL-Queries.Sp24"
+author: "Zongyu Wu"
+date: "Spring 2024"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r}
+library(RSQLite)
+dbcon <- dbConnect(RSQLite::SQLite(), "MediaDB.db")
+```
+
+1.
+```{sql connection=dbcon}
+select LastName, FirstName, Title, HireDate
+from employees
+order by LastName
+```
+
+2.
+```{sql connection=dbcon}
+select g.Name, count(distinct t.AlbumId) as NumberOfAlbums
+from genres g left join tracks t using(GenreId)
+group by g.GenreId
+limit 10
+```
+
+3.
+```{sql connection=dbcon}
+select * from media_types
+```
+4.
+```{sql connection=dbcon}
+select g.Name, count(t.TrackId) as NumberOfTracks
+from genres g join tracks t using(GenreId)
+group by g.Name
+having NumberOfTracks >= 4
+order by NumberOfTracks desc
+limit 10
+```
+5.
+```{sql connection=dbcon}
+select LastName, FirstName
+from employees
+order by strftime("%Y %m", BirthDate) desc
+limit 1
+```
+
+
+6.
+```{sql connection=dbcon}
+select c.State, count(i.invoiceId) as NumberOfPerchases
+from invoices i join customers c using(CustomerId)
+where Country = "Brazil"
+group by c.State
+having NumberOfPerchases >= 2
+order by c.State 
+```
+7.
+```{sql connection=dbcon}
+select count(*) as NumberOfEmployeeNotWorked
+from employees e
+where e.EmployeeId not in
+(
+select distinct SupportRepId
+from customers
+)
+```
+8.
+```{sql connection=dbcon}
+select count(*) as NumberOfAlbums
+from albums
+where Title like "%Classic%" and Title not like "%Hard%"
+```
+9.
+```{sql connection=dbcon}
+select count(*)
+from genres
+```
+10.
+```{sql connection=dbcon}
+select m.Name, round(sum(t.Milliseconds) / 3600000.0, 1) as hours
+from media_types m join tracks t using(MediaTypeId)
+group by m.MediaTypeId
+
+```
+11.
+```{sql connection=dbcon}
+select al.Title, ar.Name
+from artists ar join albums al on (ar.ArtistId = al.ArtistId)
+join tracks t on (t.AlbumId = al.AlbumId)
+group by al.AlbumId
+order by sum(t.Milliseconds) desc
+limit 1
+```
+12.
+```{sql connection=dbcon}
+select g.GenreId, g.Name 
+from genres g left join tracks t using(GenreId)
+group by g.GenreId
+order by sum(g.GenreId) 
+limit 1
+```
+13.
+```{sql connection=dbcon}
+select m.MediaTypeId, m.Name 
+from media_types m left join tracks t using(MediaTypeId)
+group by m.MediaTypeId
+order by sum(m.MediaTypeId) 
+limit 1
+```
+14.
+```{sql connection=dbcon}
+select c.Country, count(distinct c.CustomerId) as NumberOfCustomer, sum(it.UnitPrice * it.Quantity) as TotalSpent
+from customers c join invoices i using(CustomerId)
+join invoice_items it using(invoiceId)
+group by c.Country
+limit 10
+```
+15.
+```{sql connection=dbcon}
+select sum(i.Total) as TotalSpent
+from invoices i join customers c using(CustomerId)
+where c.Country not in ('Brazil', 'Argentina', 'Chile');
+```
+
+16.
+```{sql connection=dbcon}
+with tmp as (
+select it.UnitPrice, it.Quantity,
+  case 
+    when m.Name like "%AAC%" then "AAC"
+    when m.Name like "%MPEG%" then "MPEG"
+  end 
+  as Name
+from invoices join invoice_items it using(invoiceId)
+join tracks using(TrackId)
+join media_types m using(MediaTypeId)
+),
+
+totals as (
+select Name, sum(UnitPrice * Quantity) as total
+from tmp
+group by Name
+)
+
+select abs(a.total - b.total) as difference
+from totals a, totals b
+where a.Name = "AAC" and b.Name = "MPEG" 
+```
+17.
+```{sql connection=dbcon}
+select c.Country
+from customers c
+group by c.Country
+order by sum(customerId) desc
+limit 1
+```
+18.
+```{sql connection=dbcon}
+select count(TrackId) as NumberOfRecords
+from artists ar join albums using(ArtistId)
+join tracks using(AlbumId)
+group by ArtistId
+having ar.Name like "%Amy Winehouse%"
+```
+19.
+```{sql connection=dbcon}
+select ar.Name, sum(it.UnitPrice * Quantity) as TotalEarn
+from artists ar join albums using(ArtistId)
+join tracks using(AlbumId)
+join invoice_items it using(TrackId)
+join invoices using(invoiceId)
+group by ArtistId
+order by TotalEarn desc
+limit 1
+```
+20.
+```{sql connection=dbcon}
+select ar.Name, sum(it.Quantity) as PurchasedTimes
+from artists ar join albums using(ArtistId)
+join tracks using(AlbumId)
+join invoice_items it using(TrackId)
+join invoices using(invoiceId)
+join customers c using(CustomerId)
+where c.City = "Paris"
+group by ar.ArtistId
+order by sum(it.Quantity) desc
+limit 1
+```
+
+```{r}
+dbDisconnect(dbcon)
+```

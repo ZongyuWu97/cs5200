@@ -1,0 +1,128 @@
+---
+title: "WuZ.CS5200.Report.Sp24.sqldf"
+author: "Zongyu Wu"
+date: "Spring 2024"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Preparation
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+Load data from `.csv` files and bind them into a single data frame for further analysis.
+
+```{r}
+library(sqldf)
+s2o <- read.csv("https://s3.us-east-2.amazonaws.com/artificium.us/assignments/80.xml/a-80-305/gen-xml/synthsalestxns-Sep2Oct.csv")
+n2d <- read.csv("https://s3.us-east-2.amazonaws.com/artificium.us/assignments/80.xml/a-80-305/gen-xml/synthsalestxns-Nov2Dec.csv")
+j2m <- read.csv("https://s3.us-east-2.amazonaws.com/artificium.us/assignments/80.xml/a-80-305/gen-xml/synthsalestxns-Jan2Mar.csv")
+
+df <- rbind(s2o, rbind(n2d, j2m))
+df$date <- strftime(as.Date(df$date, "%m/%d/%y"), "%y-%m-%d")
+
+head(df, 5)
+```
+
+## Calculation
+
+Calculate data needed in the analysis.
+Get number of visits
+
+```{r}
+# Number of visits
+NumberOfVisits <- nrow(df)
+print(NumberOfVisits)
+```
+Get number of restaurants
+```{r}
+# Number of restaurants
+sql <- "select count(distinct restaurant) as res from df"
+NumberOfRestaurants <- sqldf(sql)
+print(NumberOfRestaurants)
+```
+Get all dates
+```{r}
+# All dates
+sql <- "select date from df 
+where date is not null 
+order by date asc"
+dates <- sqldf(sql)
+head(dates, 5)
+```
+Get average spent per visit across restaurants
+```{r}
+# Average spent per visit across restaurants
+sql <- "select sum(cast(substring(amount, 2) as decimal(10, 2))) / count(*) as avg
+from df 
+where amount is not null"
+avg <- sqldf(sql)
+head(avg)
+```
+Get standard deviation of all spent
+```{r}
+# Standard deviation
+sql <- "select stdev(cast(substring(amount, 2) as decimal(10, 2))) as stdev
+from df 
+where amount is not null"
+stdev <- sqldf(sql)
+head(stdev)
+```
+Get most visited restaurant
+```{r}
+# Most visited restaurant
+sql <- "select count(*) as visits, restaurant
+from df 
+group by restaurant
+order by visits desc"
+visits <- sqldf(sql)
+head(visits)
+```
+Get revenue by restaurant
+```{r}
+# Revenue by year
+sql <- "select sum(cast(substring(amount, 2) as decimal(10, 2))) as revenue, restaurant
+from df 
+group by restaurant
+order by revenue desc"
+revenue <- sqldf(sql)
+head(revenue)
+```
+Get average size of a party 
+```{r}
+# Average size of a party 
+sql <- "select sum(guests) * 1.0 / count(*)  as partySize
+from df 
+where guests is not null"
+size <- sqldf(sql)
+head(size)
+```
+Get percentage of party consumed wine
+```{r}
+# Percent of party consumed wine
+sql <- "select (count(case when wine = \"Yes\" then 1 end) * 100.0) / count(wine) as percent
+from df
+where wine is not null"
+wine <- sqldf(sql)
+head(wine)
+```
+Get summary of visits and revenue for each restaurant
+```{r}
+# Summary of visits and revenue for each restaurant
+sql <- "select restaurant, count(*) as visits, sum(cast(substring(amount, 2) as decimal(10, 2))) * 1.0 / count(*) as avgRevenue
+from df
+where amount is not null
+group by restaurant"
+summary <- sqldf(sql)
+head(summary)
+```
+
+## Analysis of Restaurant Visits
+
+We recorded a total number of `r NumberOfVisits` visits across `r NumberOfRestaurants[1, 1]` different restaurants from `r dates[1, 1]` to `r dates[nrow(df), 1]`. The average amount spent for a visit across all restaurants is `r avg[1, 1]` (σ = `r stdev[1, 1]`). The most visits were at `r visits[1, 2]` while the largest revenue across all years was at `r revenue[1, 2]`. The average size of a party was `r size[1, 1]` and `r wine[1, 1]`% of all parties consumed wine.
+
+### Summary of Revenue
+```{r}
+knitr::kable(summary)
+```
