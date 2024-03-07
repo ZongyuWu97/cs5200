@@ -1,0 +1,472 @@
+---
+title: "Analysis of Wildlife Strikes to Aircraft"
+author: "Zongyu Wu"
+date: "Spring 2024"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+email: zongyuwu97@gmail.com
+subtitle: Practicum I CS5200
+---
+
+## Connect to database
+
+```{r connectDatabase}
+# 1. Library
+library("RMariaDB")
+library("DBI")
+
+# 2. Settings
+db_user <- 'admin'            # use your value from the setup
+db_password <- 'wuzongyu'    # use your value from the setup
+db_name <- 'practicum1'         # use your value from the setup
+
+db_host <- 'cs5200.ceko8sdfannu.us-east-1.rds.amazonaws.com'       # for aws
+
+db_port <- 3306
+
+# 3. Connect to remote server database
+
+mydb.aws <-  DBI::dbConnect(RMariaDB::MariaDB(), user = db_user, password = db_password,
+                           dbname = db_name, host = db_host, port = db_port)
+# 4. Knit setting
+knitr::opts_chunk$set(connection = "mydb.aws", echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+## Test connection
+```{sql dropTest, connection=mydb.aws, eval=F}
+drop table if exists courses;
+```
+
+```{sql createTest, connection=mydb.aws, eval=F}
+create table if not exists courses (
+  cid INTEGER NOT NULL PRIMARY KEY,
+  title varchar(32) NOT NULL,
+  credits INTEGER NOT NULL
+);
+```
+
+
+```{sql insertTest, connection=mydb.aws, eval=F}
+insert into courses (cid,title,credits) values 
+  (1100,"CS and Application", 4),
+  (2000,"Princ Info Sci", 4),
+  (5200,"DBMS", 4),
+  (5030,"Intro ML", 3);
+```
+
+```{sql selsectTest, connection=mydb.aws, eval=F}
+select * from courses limit 3;
+```
+
+## Create schemas
+
+```{r createSchema}
+dbExecute(mydb.aws, "SET foreign_key_checks = 0")
+
+dbExecute(mydb.aws, "drop table if exists flights")
+createFlights <- "create table if not exists flights (
+  fid integer primary key,
+  date date,
+  originAirport integer,
+  airlineName text,
+  aircraftType text,
+  isHeavy boolean,
+  foreign key (originAirport) references airports(aid)
+)"
+dbExecute(mydb.aws, createFlights)
+
+dbExecute(mydb.aws, "drop table if exists airports")
+createAirports <- "create table if not exists airports (
+  aid integer primary key,
+  airportName text,
+  airportState text,
+  airportCode text
+)"
+dbExecute(mydb.aws, createAirports)
+
+dbExecute(mydb.aws, "drop table if exists conditions")
+createConditions <- "create table if not exists conditions (
+  cid integer primary key,
+  sky_condition text,
+  explanation text
+)"
+dbExecute(mydb.aws, createConditions)
+
+dbExecute(mydb.aws, "drop table if exists strikes")
+createStrikes <- "create table if not exists strikes (
+  sid integer primary key,
+  fid integer,
+  numbirds integer,
+  impact text,
+  damage boolean,
+  altitude integer,
+  conditions integer,
+  foreign key (fid) references flights(fid),
+  foreign key (conditions) references conditions(cid),
+  check (altitude >= 0)
+)"
+dbExecute(mydb.aws, createStrikes)
+
+dbExecute(mydb.aws, "SET foreign_key_checks = 1")
+
+```
+
+```{sql checkFlights, connection = mydb.aws, eval = F}
+desc flights
+```
+```{sql checkAirports, connection = mydb.aws, eval = F}
+desc airports
+```
+```{sql checkConditions, connection = mydb.aws, eval = F}
+desc conditions
+```
+```{sql checkStrikes, connection = mydb.aws, eval = F}
+desc strikes
+```
+
+## Load csv
+```{r loadCSV}
+bds.raw <- read.csv("BirdStrikesData-V3.csv", header = T, stringsAsFactors = F)
+head(bds.raw, 3)
+```
+
+## Import data
+```{r declareDataFrames}
+
+# Declare mirror dataframes
+df.strikes <- data.frame(sid = integer(0),
+                         fid = integer(0),
+                         numbirds = integer(0),
+                         impact = character(0),
+                         damage = logical(0),
+                         altitude = integer(0),
+                         conditions = integer(0))
+
+df.conditions <- data.frame(cid = integer(0),
+                            explanation = character(0),
+                            sky_condition = character(0))
+
+df.flights <- data.frame(fid = integer(0),
+                         date = character(0),
+                         originAirport = integer(0),
+                         airlineName = character(0),
+                         aircraftType = character(0),
+                         isHeavy = logical(0))
+
+df.airports <- data.frame(aid = integer(0),
+                          airportName = character(0),
+                          airportCode = character(0),
+                          airportState = character(0))
+
+```
+
+```{r helperFunction}
+
+findAirportPK <- function (aName, aCode, aState)
+{
+  # aid is the return value
+  aid <- 0
+  
+  # does airport already exist?
+  doesExist <- any(df.airports$airportName == aName)
+  
+  if (doesExist == TRUE) {
+    # we found the airport, so let's get it aid
+    # find the row in df.airports that contains this airport
+    r <- which(df.airports$airportName == aName)
+    
+    # found aid is the first element of the returned vector
+    aid <- r[1]
+  } else {
+    # airport does not exist, let's add it after the last row
+    # R adds a new rows automatically
+    lastRow <- nrow(df.airports)
+    newRow <- lastRow + 1
+    
+    # new aid is the row number
+    df.airports[newRow,'aid'] <<- newRow
+    
+    # if the airport name aName is blank, use "unknown" as airport name
+    if (nchar(aName) == 0)
+      aName <- "UNKNOWN"
+    
+    # save airport name, state, and code
+    df.airports[newRow,'airportName'] <<- aName
+    df.airports[newRow,'airportCode'] <<- aCode
+    df.airports[newRow,'airportState'] <<- aState
+    
+    # return value: new aid is new row number
+    aid <- newRow
+  }
+  
+  return (aid)
+}
+
+findConditionPK <- function (sky_condition, explanation)
+{
+  # aid is the return value
+  cid <- 0
+  
+  # does airport already exist?
+  doesExist <- any(df.conditions$sky_condition == sky_condition)
+  
+  if (doesExist == TRUE) {
+    # we found the airport, so let's get it aid
+    # find the row in df.airports that contains this airport
+    r <- which(df.conditions$sky_condition == sky_condition)
+    
+    # found aid is the first element of the returned vector
+    cid <- r[1]
+  } else {
+    # airport does not exist, let's add it after the last row
+    # R adds a new rows automatically
+    lastRow <- nrow(df.conditions)
+    newRow <- lastRow + 1
+    
+    # new aid is the row number
+    df.conditions[newRow,'cid'] <<- newRow
+    
+    # if the airport name aName is blank, use "unknown" as airport name
+    if (nchar(sky_condition) == 0)
+      sky_condition <- "UNKNOWN"
+    
+    # save airport name, state, and code
+    df.conditions[newRow,'sky_condition'] <<- sky_condition
+    df.conditions[newRow,'explanation'] <<- explanation
+
+    # return value: new aid is new row number
+    cid <- newRow
+  }
+  
+  return (cid)
+}
+
+findFlightPK <- function (fDate, fOriginAirport, fAirlineName, fAircraftType, fIsHeavy)
+{
+  # aid is the return value
+  fid <- 0
+  
+  # does airport already exist?
+  doesExist <- any(df.flights$fDate == fDate & df.flights$fOriginAirport == fOriginAirport & df.flights$fAirlineName == fAirlineName & df.flights$fAircraftType == fAircraftType & df.flights$fIsHeavy == fIsHeavy)
+  
+  if (doesExist == TRUE) {
+    # we found the airport, so let's get it aid
+    # find the row in df.airports that contains this airport
+    r <- which(df.flights$fDate == fDate & df.flights$fOriginAirport == fOriginAirport & df.flights$fAirlineName == fAirlineName & df.flights$fAircraftType == fAircraftType & df.flights$fIsHeavy == fIsHeavy)
+    
+    # found aid is the first element of the returned vector
+    fid <- r[1]
+  } else {
+    # airport does not exist, let's add it after the last row
+    # R adds a new rows automatically
+    lastRow <- nrow(df.flights)
+    newRow <- lastRow + 1
+    
+    # new aid is the row number
+    df.flights[newRow,'fid'] <<- newRow
+    
+    # if the airport name aName is blank, use "unknown" as airport name
+    if (nchar(fDate) == 0)
+      fDate <- ""
+    if (nchar(fAirlineName) == 0)
+      fAirlineName <- "UNKNOWN"
+    if (nchar(fAircraftType) == 0)
+      fAircraftType <- "UNKNOWN"
+    if (fIsHeavy == "Yes")
+      fIsHeavy <- TRUE
+    else
+      fIsHeavy <- FALSE
+
+    
+    # save airport name, state, and code
+    df.flights[newRow,'date'] <<- fDate
+    df.flights[newRow,'originAirport'] <<- fOriginAirport
+    df.flights[newRow,'airlineName'] <<- fAirlineName
+    df.flights[newRow,'aircraftType'] <<- fAircraftType
+    df.flights[newRow,'isHeavy'] <<- fIsHeavy
+
+    # return value: new aid is new row number
+    fid <- newRow
+  }
+  
+  return (fid)
+}
+```
+
+```{r splitDataFrames}
+
+# Split data into dataframes
+n <- nrow(bds.raw)
+
+for (r in 1:n) 
+{
+  # treat rid as sid
+  df.strikes[r,'sid'] <- bds.raw[r, 'rid']
+  
+  df.strikes[r,'numbirds'] <- 1
+  df.strikes[r,'impact'] <- bds.raw[r, 'impact']
+  df.strikes[r,'altitude'] <- bds.raw[r, 'altitude_ft']
+  if (bds.raw[r, 'damage'] == "Damage" | bds.raw[r, 'damage'] == "Loss")
+    df.strikes[r,'damage'] <- TRUE
+  else
+    df.strikes[r,'damage'] <- FALSE
+  
+  # Use other information to find airport PK
+  aName <- bds.raw[r, 'airport']
+  aState <- bds.raw[r, 'origin']
+  aCode <- ''
+  aid <- findAirportPK (aName, aCode, aState)
+  
+  # Get condition PK
+  sky_condition <- bds.raw[r, 'sky_conditions']
+  explanation <- ''
+  df.strikes[r,'conditions'] <- findConditionPK(sky_condition, explanation)
+
+  # Get flight PK
+  fDate <- bds.raw[r,'flight_date']   
+  fOriginAirport <- aid
+  fAirlineName <- bds.raw[r,'airline']
+  fAircraftType <- bds.raw[r,'aircraft']
+  fIsHeavy <- bds.raw[r,'heavy_flag']
+  df.strikes[r,'fid'] <- findFlightPK(fDate, aid, fAirlineName, fAircraftType, fIsHeavy)
+
+}
+
+# clean up the date column by remove the time stamp
+df.flights$date <- substr(df.flights$date, 1, nchar(df.flights$date)-5)
+
+df.flights$date <- as.Date(df.flights$date, format = "%m/%d/%y")
+```
+
+```{r checkDataFrames, eval = F}
+head(df.strikes, 3)
+head(df.conditions, 3)
+head(df.flights, 3)
+head(df.airports, 3)
+```
+```{r writeIntoDatabase}
+dbWriteTable(mydb.aws, "conditions", df.conditions, overwrite = F, append = T, row.names = FALSE)
+dbWriteTable(mydb.aws, "airports", df.airports, overwrite = F, append = T, row.names = FALSE)
+dbWriteTable(mydb.aws, "flights", df.flights, overwrite = F, append = T, row.names = FALSE)
+dbWriteTable(mydb.aws, "strikes", df.strikes, overwrite = F, append = T, row.names = FALSE)
+```
+
+```{sql displayConditions, connection = mydb.aws, eval = F}
+select * from conditions limit 5
+```
+```{sql displayAirports, connection = mydb.aws, eval = F}
+select * from airports limit 5
+```
+```{sql displayFlights, connection = mydb.aws, eval = F}
+select * from flights limit 5
+```
+```{sql displayStrikes, connection = mydb.aws, eval = F}
+select * from strikes limit 5
+```
+
+## Top Airports with Strikes
+```{sql topAirportsWithStrikes, connection=mydb.aws}
+select airportState as State, count(sid) as NumberOfIncidents
+from strikes s join flights f on s.fid = f.fid
+join airports a on a.aid = f.originAirport
+group by State
+order by NumberOfIncidents desc
+limit 10
+```
+## Analysis by Airline
+```{sql analysisByAirline, connection=mydb.aws}
+with counts as (
+select airlineName, count(sid) as NumberOfIncidents
+from strikes s join flights f on s.fid = f.fid
+group by airlineName
+)
+
+select airlineName, NumberOfIncidents
+from counts 
+where NumberOfIncidents > (
+select avg(NumberOfIncidents) from counts
+)
+order by NumberOfIncidents desc
+```
+
+## Analysis by Month
+```{r analysisByMonth}
+qry <- "select month(date) Month, count(sid) NumberOfIncidents
+  from strikes s join flights f on s.fid = f.fid
+  group by month(date)
+  order by NumberOfIncidents desc"
+df.analysisByMonth <- dbGetQuery(mydb.aws, qry)
+df.analysisByMonth$Month <- month.name[df.analysisByMonth$Month]
+head(df.analysisByMonth, 6)
+```
+
+
+## Trend by Month
+
+```{r trendByMonth}
+df.analysisByMonth$Month <- factor(df.analysisByMonth$Month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))
+df.analysisByMonth <- df.analysisByMonth[order(df.analysisByMonth$Month), ]
+
+x <- as.numeric(df.analysisByMonth$NumberOfIncidents)
+y <- df.analysisByMonth$Month
+
+barplot(x, names.arg = y, xlab = "Month", ylab = "Number of Incidents", las = 2, main = "Trend by Month")
+```
+
+## Create stored procedure
+```{r createAudit}
+dbExecute(
+  mydb.aws,
+  "drop table if exists audit_log"
+)
+
+createAudit <- "create table if not exists audit_log (
+    auid integer auto_increment primary key,
+    modificationType text not null,
+    tableName text not null,
+    tablePK integer not null,
+    modificationTime timestamp default current_timestamp not null
+);"
+dbExecute(mydb.aws, createAudit)
+```
+
+```{r createProcedure}
+dbExecute(
+  mydb.aws,
+  "drop procedure if exists rmStrike"
+)
+
+createProcedure <- "create procedure rmStrike(in sid integer)
+  begin 
+      delete from strikes where sid = sid;
+      
+      insert into audit_log (modificationType, tableName, tablePK)
+      VALUES ('Removal', 'strikes', sid);
+  end"
+dbExecute(mydb.aws, createProcedure)
+```
+
+```{r testProcedure}
+## Test remove strike with sid 1195
+## It exists now
+res <- dbGetQuery(mydb.aws, "select * from strikes where sid = 1195")
+print(res)
+
+## Remove and it doesn't exists
+dbExecute(mydb.aws, "call rmStrike(1195);")
+res <- dbGetQuery(mydb.aws, "select * from strikes where sid = 1195")
+print(res)
+
+## Check audit_log table
+res <- dbGetQuery(mydb.aws, "select * from audit_log")
+print(res)
+```
+
+## Clean up
+
+```{r cleanup}
+status <- dbDisconnect(mydb.aws)
+```
+

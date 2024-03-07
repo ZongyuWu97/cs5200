@@ -1,0 +1,61 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+
+%SetFonts
+
+%SetFonts
+
+
+\title{HW7}
+\author{Zongyu Wur}
+%\date{}							% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+%\section{}
+%\subsection{}
+
+\section{Find the names of the reps who represent the territory "EMEA".}
+$\pi_{rname}(\sigma_{territory=``EMEA''}(rep s))$
+
+\section{Find the distinct names of all reps who earned less than 10,000 in 2023.}
+$\pi_{reps.rname}(\sigma_{(earnings.amount < 10000)\wedge(earnings.year = 2023)}(reps * earnings))$
+
+\section{How many (distinct) students majoring in "CS" had a score above 94.51 in any four credit hours course?}
+$\mathfrak{F}_{<COUNT(Students.tid)>}(\pi_{Students.tid}(\sigma_{(Students.major = ``CS'')\wedge(Enrollments.score > 94.51)\wedge (Courses.creditHours = 4)}(Students *  Enrollments * Sections *  Courses)))$
+
+\section{How many courses with fewer than four credits are offered in each college? List the college and the number of courses in that college.}
+$\mathfrak{F}_{cname, <COUNT(cid)>}(\pi_{cname, cid}(\sigma_{hours < 4}(Courses)))$
+
+\section{How many students were enrolled (i.e., took any course) in the Fall 2023 term?}
+$\mathfrak{F}_{<COUNT(Students.tid)>}(\pi_{Students.tid}(\sigma_{(Sections.term = ``Fall'')\wedge(Sections.year = 2023)}(Students * Enrollments * Sections)))$
+
+\section{List the names of all students in the college "Khoury" who are on coop and have a GPA between 3.0 and 3.4.}
+$\pi_{sname}(\sigma_{(college = ``Khoury'')\wedge(onCoop = True)\wedge(gpa \geq 3.0) \wedge(gpa \leq 3.4)}(Students))$
+
+\section{Find the distinct names of all courses with 3 or more credits .}
+$\{c.cname: Courses(c) \wedge c.credits \geq 3\}$
+
+\section{}
+$\{c.cid, c.cname, c.hours: Courses(c)\wedge c.hours \leq 4\}$
+
+\section{}
+$\rho_{YearAmount(year, amount)}({}_{year}\mathfrak{F}_{<year, SUM(amount)>}(\pi_{year, amount}(\sigma_{territory\neq``EMEA''}(reps * earnings))))$
+
+\section{}
+WITH x AS (\\
+SELECT * FROM reps NATURAL JOIN earnings WHERE amount $<$ 50000\\
+)\\
+SELET year, amount\\
+FROM  x\\
+WHERE year in (2021, 2022, 2023)\\
+AND territory = ``EMEA''\\
+
+
+\end{document}  
