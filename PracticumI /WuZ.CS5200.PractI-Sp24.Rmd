@@ -272,8 +272,6 @@ findFlightPK <- function (fDate, fOriginAirport, fAirlineName, fAircraftType, fI
       fDate <- ""
     if (nchar(fAirlineName) == 0)
       fAirlineName <- "UNKNOWN"
-    if (nchar(fAircraftType) == 0)
-      fAircraftType <- "UNKNOWN"
     if (fIsHeavy == "Yes")
       fIsHeavy <- TRUE
     else
