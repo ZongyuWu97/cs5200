@@ -1,0 +1,128 @@
+---
+title: "Assignment / Explore Query Planning and Indexing"
+author: "Zongyu WU"
+date: "Spring 2024"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+Setup connection.
+```{r}
+library(RSQLite)
+dbcon <- dbConnect(RSQLite::SQLite(), "sakila.db")
+```
+
+## Question 1
+```{r}
+# Drop index
+dbExecute(dbcon, "drop index if exists TitleIndex")
+```
+
+
+```{r}
+query <- "select l.NAME as LanguageName, count(f.FILM_ID) as NumberOfFilms
+  from LANGUAGE l join FILM f on l.LANGUAGE_ID = f.LANGUAGE_ID
+  group by l.LANGUAGE_ID"
+res <- dbGetQuery(dbcon, query)
+print(res)
+```
+
+## Question 2
+```{r}
+query <- "EXPLAIN QUERY PLAN
+  select l.NAME as LanguageName, count(f.FILM_ID) as NumberOfFilms
+  from LANGUAGE l join FILM f on l.LANGUAGE_ID = f.LANGUAGE_ID
+  group by l.LANGUAGE_ID"
+res <- dbGetQuery(dbcon, query)
+print(res)
+```
+
+## Question 3
+```{r}
+before3 <- Sys.time()
+query <- "select f.TITLE, c.NAME, f.LENGTH
+  from FILM f join FILM_CATEGORY fc on f.FILM_ID = fc.FILM_ID
+  join CATEGORY c on c.CATEGORY_ID = fc.CATEGORY_ID
+  where TITLE =  \"ZORRO ARK\""
+res <- dbGetQuery(dbcon, query)
+after3 <- Sys.time()
+print(res)
+```
+## Question 4
+```{r}
+query <- "EXPLAIN QUERY PLAN
+  select f.TITLE, c.NAME, f.LENGTH
+  from FILM f join FILM_CATEGORY fc on f.FILM_ID = fc.FILM_ID
+  join CATEGORY c on c.CATEGORY_ID = fc.CATEGORY_ID
+  where TITLE =  \"ZORRO ARK\""
+res <- dbGetQuery(dbcon, query)
+print(res)
+```
+
+## Question 5
+```{r}
+query <- "create index if not exists TitleIndex on FILM(TITLE)"
+res <- dbExecute(dbcon, query)
+print(res)
+```
+
+## Question 6
+```{r}
+before6 <- Sys.time()
+query <- "select f.TITLE, c.NAME, f.LENGTH
+  from FILM f join FILM_CATEGORY fc on f.FILM_ID = fc.FILM_ID
+  join CATEGORY c on c.CATEGORY_ID = fc.CATEGORY_ID
+  where TITLE =  \"ZORRO ARK\""
+res <- dbGetQuery(dbcon, query)
+after6 <- Sys.time()
+print(res)
+```
+
+```{r}
+query <- "EXPLAIN QUERY PLAN
+  select f.TITLE, c.NAME, f.LENGTH
+  from FILM f join FILM_CATEGORY fc on f.FILM_ID = fc.FILM_ID
+  join CATEGORY c on c.CATEGORY_ID = fc.CATEGORY_ID
+  where TITLE =  \"ZORRO ARK\""
+res <- dbGetQuery(dbcon, query)
+print(res)
+```
+
+## Question 7
+It's not the same. After adding the index, the search on f is changed from using integer primary key to using index TitleIndex. The scan on fc using covering index is also changed to a search using covering index. The query plan will show in the detail that it used the index. By adding an index, related plans are changed from scan to search. And search on that specific column is using that index for searching.
+
+
+## Question 8
+I added the time calculation function in Question 3 and Question 6 to save the code repeat. Here I will print the results from the above two questions.
+```{r}
+cat("Question 3 time elapsed: ", round((after3 - before3) ,3), " sec\n")
+cat("Question 6 time elapsed: ", round((after6 - before6) ,3), " sec")
+```
+As we can see, the time is reduced. The amount of reduce varies though. It may be the same query is parsed in different ways.
+
+## Question 9
+```{r}
+query <- "select f.TITLE, l.NAME, f.LENGTH
+  from FILM f join LANGUAGE l on f.LANGUAGE_ID = l.LANGUAGE_ID
+  where lower(f.TITLE) like '%gold%'"
+res <- dbGetQuery(dbcon, query)
+print(res)
+```
+
+## Question 10
+```{r}
+query <- "EXPLAIN QUERY PLAN
+  select f.TITLE, l.NAME, f.LENGTH
+  from FILM f join LANGUAGE l on f.LANGUAGE_ID = l.LANGUAGE_ID
+  where lower(f.TITLE) like '%gold%'"
+res <- dbGetQuery(dbcon, query)
+print(res)
+```
+It doesn't use the index. It's because pattern match LIKE is used here.
+
+## Clean
+```{r}
+dbDisconnect(dbcon)
+```
+

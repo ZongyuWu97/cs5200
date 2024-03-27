@@ -73,7 +73,7 @@ createFlights <- "create table if not exists flights (
   airlineName text,
   aircraftType text,
   isHeavy boolean,
-  foreign key (originAirport) references airports(aid)
+  foreign key (originAirport) references airports(aid) ON DELETE CASCADE
 )"
 dbExecute(mydb.aws, createFlights)
 
@@ -103,8 +103,8 @@ createStrikes <- "create table if not exists strikes (
   damage boolean,
   altitude integer,
   conditions integer,
-  foreign key (fid) references flights(fid),
-  foreign key (conditions) references conditions(cid),
+  foreign key (fid) references flights(fid) ON DELETE CASCADE,
+  foreign key (conditions) references conditions(cid) ON DELETE CASCADE,
   check (altitude >= 0)
 )"
 dbExecute(mydb.aws, createStrikes)

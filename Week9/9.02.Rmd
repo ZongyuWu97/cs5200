@@ -1,0 +1,15 @@
+---
+title: "R Notebook"
+author: "Zongyu Wu"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+## Question 1
+
+The overall availability of the system is $99.987\% * 99.3 \% * 99.3\% * 94.7\% * 98.37\% = 91.845\%$
+
+## Question 2
+
+The expected annual reliability is $e^{-\frac{365 * 24}{1450000}} = 99.398\%$

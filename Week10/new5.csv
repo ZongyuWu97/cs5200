@@ -1,0 +1,11 @@
+rid,aircraft,airport,model,impact,flight_date,damage,airline,origin,flight_phase,wildlife_size,sky_conditions,pilot_warned_flag,altitude_ft,heavy_flag
+41,Airplane,SHEPPARD AIR FORCE BASE,T-39A,Precautionary Landing,1/21/2001 0:00,No damage,MILITARY,Texas,Climb,Small,No Cloud,Y,"2,000",No
+42,Airplane,EGLIN AFB/NW FLORIDA REGIONAL ARPT,F-16E,Precautionary Landing,1/26/2000 0:00,Damage,MILITARY,Florida,Climb,Large,No Cloud,Y,400,No
+43,Airplane,CHARLESTON AFB/INTL ARPT,C-18A,None,2/8/2001 0:00,No damage,MILITARY,South Carolina,Take-off run,Medium,No Cloud,Y,0,No
+44,Airplane,EGLIN AFB/NW FLORIDA REGIONAL ARPT,F-16C,None,8/14/2002 0:00,No damage,MILITARY,Florida,Take-off run,Small,No Cloud,Y,10,No
+45,Airplane,SHEPPARD AIR FORCE BASE,T-39A,None,6/15/2001 0:00,No damage,MILITARY,Texas,Take-off run,Medium,No Cloud,Y,0,No
+46,Airplane,CHARLESTON AFB/INTL ARPT,C-18A,Aborted Take-off,8/3/2001 0:00,No damage,MILITARY,South Carolina,Take-off run,Small,No Cloud,Y,0,No
+47,Airplane,BARKSDALE AIR FORCE BASE ARPT,B-53H,None,11/2/2000 0:00,No damage,MILITARY,Louisiana,Approach,Small,No Cloud,Y,500,No
+48,Airplane,CHARLESTON AFB/INTL ARPT,C-18A,Precautionary Landing,11/24/2002 0:00,No damage,MILITARY,South Carolina,Climb,Medium,No Cloud,Y,300,No
+49,Airplane,SHEPPARD AIR FORCE BASE,T-39A,Precautionary Landing,3/2/2002 0:00,No damage,MILITARY,Texas,Approach,Small,No Cloud,Y,800,No
+50,Airplane,SHEPPARD AIR FORCE BASE,T-39A,Precautionary Landing,10/4/2002 0:00,No damage,MILITARY,Texas,Climb,Medium,No Cloud,Y,10,No

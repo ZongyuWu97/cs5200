@@ -1,0 +1,11 @@
+rid,aircraft,airport,model,impact,flight_date,damage,airline,origin,flight_phase,wildlife_size,sky_conditions,pilot_warned_flag,altitude_ft,heavy_flag
+21,Airplane,BARKSDALE AIR FORCE BASE ARPT,B-53H,None,4/3/2001 0:00,No damage,MILITARY,Louisiana,Approach,Medium,No Cloud,Y,200,No
+22,Airplane,BARKSDALE AIR FORCE BASE ARPT,B-53H,Precautionary Landing,4/6/2001 0:00,No damage,MILITARY,Louisiana,Approach,Medium,No Cloud,Y,40,No
+23,Airplane,CHARLESTON AFB/INTL ARPT,C-22A,Aborted Take-off,7/8/2001 0:00,No damage,MILITARY,South Carolina,Climb,Medium,No Cloud,Y,0,No
+24,Airplane,CHARLESTON AFB/INTL ARPT,C-18A,None,1/29/2001 0:00,No damage,MILITARY,South Carolina,Approach,Medium,No Cloud,Y,400,No
+25,Airplane,CHARLESTON AFB/INTL ARPT,C-18A,Precautionary Landing,6/17/2000 0:00,No damage,MILITARY,South Carolina,Approach,Medium,Some Cloud,Y,300,No
+26,Airplane,CUSTOM AIRPOTR E,B-53H,None,4/3/2001 0:00,No damage,MILITARY,Louisiana,Approach,Medium,No Cloud,Y,200,No
+27,Airplane,CUSTOM AIRPOTR F,B-53H,Precautionary Landing,4/6/2001 0:00,No damage,MILITARY,Louisiana,Approach,Medium,No Cloud,Y,40,No
+28,Airplane,CHARLESTON AFB/INTL ARPT,C-22A,Aborted Take-off,7/8/2001 0:00,No damage,MILITARY,South Carolina,Climb,Medium,No Cloud,Y,0,No
+29,Airplane,CHARLESTON AFB/INTL ARPT,C-18A,None,1/29/2001 0:00,No damage,MILITARY,South Carolina,Approach,Medium,No Cloud,Y,400,No
+30,Airplane,CHARLESTON AFB/INTL ARPT,C-18A,Precautionary Landing,6/17/2000 0:00,No damage,MILITARY,South Carolina,Approach,Medium,Some Cloud,Y,300,No

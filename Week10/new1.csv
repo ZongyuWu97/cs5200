@@ -1,0 +1,11 @@
+rid,aircraft,airport,model,impact,flight_date,damage,airline,origin,flight_phase,wildlife_size,sky_conditions,pilot_warned_flag,altitude_ft,heavy_flag
+1,Airplane,BARKSDALE AIR FORCE BASE ARPT,B-53H,None,11/14/2002 0:00,No damage,MILITARY,Louisiana,Approach,Medium,Overcast,Y,"2,000",No
+2,Airplane,EDWARDS AIR FORCE BASE,T-39A,Precautionary Landing,10/11/2002 0:00,No damage,MILITARY,California,Climb,Medium,No Cloud,Y,400,No
+3,Airplane,BARKSDALE AIR FORCE BASE ARPT,B-54H,Precautionary Landing,5/16/2001 0:00,No damage,MILITARY,Louisiana,Approach,Medium,No Cloud,Y,"1,000",No
+4,Airplane,BARKSDALE AIR FORCE BASE ARPT,B-55H,Precautionary Landing,5/24/2001 0:00,No damage,MILITARY,Louisiana,Approach,Medium,No Cloud,Y,"1,800",No
+5,Airplane,SHEPPARD AIR FORCE BASE,AT-39B,None,4/19/2001 0:00,No damage,MILITARY,Texas,Approach,Small,Some Cloud,Y,200,No
+6,Airplane,CUSTOM AIRPOTR A,B-56H,None,11/14/2002 0:00,No damage,MILITARY,Louisiana,Approach,Medium,Overcast,Y,"2,000",No
+7,Airplane,CUSTOM AIRPOTR B,T-40A,Precautionary Landing,10/12/2002 0:00,No damage,MILITARY,California,Climb,Medium,No Cloud,Y,400,No
+8,Airplane,BARKSDALE AIR FORCE BASE ARPT,B-50H,Precautionary Landing,5/17/2001 0:00,No damage,MILITARY,Louisiana,Approach,Medium,No Cloud,Y,"1,000",No
+9,Airplane,BARKSDALE AIR FORCE BASE ARPT,B-51H,Precautionary Landing,5/24/2001 0:00,No damage,MILITARY,Louisiana,Approach,Medium,No Cloud,Y,"1,800",No
+10,Airplane,SHEPPARD AIR FORCE BASE,AT-40B,None,4/20/2001 0:00,No damage,MILITARY,Texas,Approach,Small,Some Cloud,Y,200,No

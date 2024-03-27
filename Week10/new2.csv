@@ -1,0 +1,11 @@
+rid,aircraft,airport,model,impact,flight_date,damage,airline,origin,flight_phase,wildlife_size,sky_conditions,pilot_warned_flag,altitude_ft,heavy_flag
+11,Airplane,CHARLESTON AFB/INTL ARPT,C-22A,Aborted Take-off,7/8/2001 0:00,No damage,MILITARY,South Carolina,Take-off run,Medium,Some Cloud,Y,0,No
+12,Airplane,BARKSDALE AIR FORCE BASE ARPT,B-53H,Precautionary Landing,7/26/2002 0:00,No damage,MILITARY,Louisiana,Climb,Medium,No Cloud,Y,0,No
+13,Airplane,SHEPPARD AIR FORCE BASE,T-39A,Precautionary Landing,7/29/2002 0:00,Damage,MILITARY,Texas,Approach,Medium,Some Cloud,Y,500,No
+14,Airplane,SHEPPARD AIR FORCE BASE,AT-39B,None,7/18/2000 0:00,No damage,MILITARY,Texas,Approach,Medium,No Cloud,Y,"1,800",No
+15,Airplane,SHEPPARD AIR FORCE BASE,AT-39B,None,7/19/2000 0:00,No damage,MILITARY,Texas,Take-off run,Small,No Cloud,Y,0,No
+16,Airplane,CUSTOM AIRPOTR C,C-18A,Precautionary Landing,9/5/2001 0:00,No damage,MILITARY,South Carolina,Climb,Medium,Some Cloud,Y,0,No
+17,Airplane,CUSTOM AIRPOTR D,C-22A,Aborted Take-off,7/8/2001 0:00,No damage,MILITARY,South Carolina,Take-off run,Medium,Some Cloud,Y,0,No
+18,Airplane,BARKSDALE AIR FORCE BASE ARPT,B-53H,Precautionary Landing,7/26/2002 0:00,No damage,MILITARY,Louisiana,Climb,Medium,No Cloud,Y,0,No
+19,Airplane,SHEPPARD AIR FORCE BASE,T-39A,Precautionary Landing,7/29/2002 0:00,Damage,MILITARY,Texas,Approach,Medium,Some Cloud,Y,500,No
+20,Airplane,SHEPPARD AIR FORCE BASE,AT-39B,None,7/18/2000 0:00,No damage,MILITARY,Texas,Approach,Medium,No Cloud,Y,"1,800",No
