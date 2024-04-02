@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE to-do [
+  <!ELEMENT to-do (List*, Item*, Content*)>
+  <!ELEMENT List EMPTY>
+  <!ATTLIST List name ID #REQUIRED>
+  <!ATTLIST List category (personal | school | home) #IMPLIED>
+  
+  <!ELEMENT Item (text, desc, due)>
+  <!ATTLIST Item iid ID #REQUIRED>
+  <!ELEMENT text (#PCDATA)>
+  <!ELEMENT desc (#PCDATA)>
+  <!ELEMENT due (#PCDATA)>
+  
+  <!ELEMENT Content EMPTY>
+  <!ATTLIST Content name IDREF #REQUIRED>
+  <!ATTLIST Content iid IDREF #REQUIRED>
+]>
+
+<to-do>
+  <!-- Lists -->
+  <List name="list1" category="personal"/>
+  <List name="list2" category="school"/>
+  <List name="list3" category="home"/>
+  
+  <!-- Items -->
+  <Item iid="item1">
+    <text>Buy groceries</text>
+    <desc>Shopping list for the week</desc>
+    <due>2023-12-01</due>
+  </Item>
+  <Item iid="item2">
+    <text>Prepare presentation</text>
+    <desc>Slides for the meeting</desc>
+    <due>2023-11-30</due>
+  </Item>
+  <Item iid="item3">
+    <text>Call mom</text>
+    <desc>Check up on her health</desc>
+    <due>2023-11-28</due>
+  </Item>
+  <Item iid="item4">
+    <text>Call dad</text>
+    <desc>Check up on his health</desc>
+    <due>2023-11-28</due>
+  </Item>
+  
+  <!-- Content -->
+  <Content name="list3" iid="item1"/>
+  <Content name="list2" iid="item2"/>
+  <Content name="list3" iid="item3"/>
+  <Content name="list3" iid="item4"/>
+</to-do>
