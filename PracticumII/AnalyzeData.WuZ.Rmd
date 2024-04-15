@@ -1,0 +1,127 @@
+---
+title: "R Notebook"
+author: "Zongyu Wu"
+date: "Spring 2024"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+email: zongyuwu97@gmail.com
+subtitle: Practicum II CS5200
+---
+
+## Connect to database
+
+```{r connectDatabase}
+# 1. Library
+library("RMariaDB")
+library("DBI")
+library(ggplot2)
+
+# 2. Settings
+db_user <- 'admin'            # use your value from the setup
+db_password <- 'wuzongyu'    # use your value from the setup
+db_name <- 'practicum1'         # use your value from the setup
+
+db_host <- 'cs5200.ceko8sdfannu.us-east-1.rds.amazonaws.com'       # for aws
+
+db_port <- 3306
+
+# 3. Connect to remote server database
+
+db.aws <-  DBI::dbConnect(RMariaDB::MariaDB(), user = db_user, password = db_password,
+                           dbname = db_name, host = db_host, port = db_port)
+# 4. Knit setting
+knitr::opts_chunk$set(connection = "db.aws", echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+## Analytical Query I: Top five sales reps with the most sales broken down by year. So, for each year for which there is data, the top five reps for that year. Think about how you would best present this information so it is easily usable by an analyst or manager.
+
+```{r}
+years <- dbGetQuery(db.aws, "select distinct year from rep_facts")
+
+for (year in years) {
+  sql <- "
+    select rep_name, sum(total_amount_sold) as total_amount_sold, year
+    from rep_facts
+    where year = ?
+    group by rep_name
+    order by year asc, sum(total_amount_sold) desc
+    limit 5
+  "
+  res <- dbGetQuery(db.aws, sql, list(year))
+  print(res)
+}
+```
+
+Above shows the total amount sold for the top 5 sales.
+
+## Analytical Query II: Total sold per product per quarter. Think about how to best display this information.
+
+```{sql connection=db.aws}
+select product_name, quarter, sum(total_amount_sold) as total_amount_sold
+from product_facts
+group by product_name, quarter
+```
+
+
+## Analytical Query III: Number of units sold per product per region. Show the result in a line graph visualization.
+
+```{r}
+sql <- "
+select product_name, region, sum(total_unit) as total_unit
+from product_facts
+group by product_name, region
+"
+
+res <- dbGetQuery(db.aws, sql)
+res$region <- factor(res$region, levels = unique(res$region))
+
+# Create the line chart with only points
+# Create the line chart with lines connecting points for each product_name
+ggplot(res, aes(x = region, y = total_unit, color = product_name, group = product_name)) +
+  geom_line() +  # Connect points with lines
+  geom_point() +  # Show individual points
+  labs(title = "Total Unit by Region for Each Product",
+       x = "Region",
+       y = "Total Unit",
+       color = "Product Name") +
+  theme_minimal()
+```
+
+## Analytical Query IV: Average sales per sales rep over the years. Show the result in a line graph visualization.
+
+```{r}
+sql <- "
+with total_year as (
+select sum(total_amount_sold) as total_amount_sold, rep_name, year
+from rep_facts
+group by year, rep_name
+)
+SELECT
+    rep_name,
+    AVG(total_amount_sold) AS avg_sales
+FROM
+    total_year
+GROUP BY
+    rep_name
+"
+res <- dbGetQuery(db.aws, sql)
+
+# Create the line chart
+ggplot(res, aes(x = rep_name, y = avg_sales, group = 1)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Average Sales per Sales Rep Over the Years",
+       x = "Sales Rep",
+       y = "Average Sales") +
+  theme_minimal()
+```
+
+
+
+## Clean up
+
+```{r cleanup}
+status <- dbDisconnect(mydb.aws)
+```
