@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Practicum II CS5200"
 author: "Zongyu Wu"
 date: "Spring 2024"
 output:
@@ -7,7 +7,6 @@ output:
   html_document:
     df_print: paged
 email: zongyuwu97@gmail.com
-subtitle: Practicum II CS5200
 ---
 
 ## Connect to database
@@ -59,9 +58,10 @@ Above shows the total amount sold for the top 5 sales.
 ## Analytical Query II: Total sold per product per quarter. Think about how to best display this information.
 
 ```{sql connection=db.aws}
-select product_name, quarter, sum(total_amount_sold) as total_amount_sold
+select year, quarter, product_name, sum(total_amount_sold) as total_amount_sold
 from product_facts
-group by product_name, quarter
+group by year, quarter, product_name
+order by year, product_name, quarter
 ```
 
 
@@ -75,6 +75,7 @@ group by product_name, region
 "
 
 res <- dbGetQuery(db.aws, sql)
+print(res)
 res$region <- factor(res$region, levels = unique(res$region))
 
 # Create the line chart with only points
@@ -94,27 +95,32 @@ ggplot(res, aes(x = region, y = total_unit, color = product_name, group = produc
 ```{r}
 sql <- "
 with total_year as (
-select sum(total_amount_sold) as total_amount_sold, rep_name, year
+select sum(total_amount_sold) as total_amount, sum(total_sales_count) as total_quantity, rep_name, year
 from rep_facts
 group by year, rep_name
 )
 SELECT
     rep_name,
-    AVG(total_amount_sold) AS avg_sales
+    total_amount / total_quantity AS avg_sales,
+    year
 FROM
     total_year
 GROUP BY
-    rep_name
+    rep_name, year
 "
 res <- dbGetQuery(db.aws, sql)
+print(res)
 
-# Create the line chart
-ggplot(res, aes(x = rep_name, y = avg_sales, group = 1)) +
+res$year <- factor(res$year)
+
+# Create the line graph
+ggplot(res, aes(x = year, y = avg_sales, color = rep_name, group = rep_name)) +
   geom_line() +
   geom_point() +
   labs(title = "Average Sales per Sales Rep Over the Years",
-       x = "Sales Rep",
-       y = "Average Sales") +
+       x = "Year",
+       y = "Average Sales",
+       color = "Sales Rep") +
   theme_minimal()
 ```
 
@@ -123,5 +129,5 @@ ggplot(res, aes(x = rep_name, y = avg_sales, group = 1)) +
 ## Clean up
 
 ```{r cleanup}
-status <- dbDisconnect(mydb.aws)
+status <- dbDisconnect(db.aws)
 ```

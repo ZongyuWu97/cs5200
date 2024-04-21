@@ -72,7 +72,9 @@ tryCatch({
         rfid INTEGER PRIMARY KEY AUTO_INCREMENT,
         rep_name text,
         total_amount_sold integer,
+        total_sales_count integer,
         average_amount_sold numeric,
+        total_quantity integer,
         quarter integer,
         year integer
     )"
@@ -83,7 +85,9 @@ tryCatch({
     SELECT 
         CONCAT(r.rep_firstname, ' ', r.rep_surname) AS rep_name,
         SUM(s.total) AS total_amount_sold,
-        AVG(s.total) AS average_amount_sold,
+        count(s.total) as total_sales_count,
+        sum(s.total) / count(s.total) AS average_amount_sold,
+        sum(s.quantity) as total_quantity,
         (STRFTIME('%m', s.date) + 2) / 3 AS quarter,
         STRFTIME('%Y', s.date) AS year
     FROM 
@@ -94,7 +98,7 @@ tryCatch({
         rep_name, (STRFTIME('%m', s.date) + 2) / 3, STRFTIME('%Y', s.date)
 "
   repRes <- dbGetQuery(db.sqlite, repFact)
-  
+  # print(repRes)
   
   ## Write into MySQL
   
@@ -107,6 +111,6 @@ finally = {
   dbDisconnect(db.sqlite)
   dbDisconnect(db.aws)
 })
-# INSERT INTO rep_facts (rep_name, total_amount_sold, average_amount_sold_per_quarter, average_amount_sold_per_year)
 
-# INSERT INTO product_facts (product_name, total_amount_sold, total_amount_sold_quarter, total_amount_sold_year, total_units_per_region)
+
+
